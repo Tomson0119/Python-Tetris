@@ -13,7 +13,7 @@ class App:
         self.win.geometry('685x820')
         self.win.resizable(False, False)
         self.win.title('TETRIS')
-        self.win.bind('<Escape>', self.destroy_all)
+        self.win.bind('<Key>', self.get_input)
 
         self.level_label = None
         self.line_label = None
@@ -29,9 +29,10 @@ class App:
         self.score = 0
 
         self.timer = timer.Timer()
-        self.queue = [Block() for _ in range(4)]
+        self.queue = [Block() for _ in range(3)]
 
         self.build_widgets()
+        self.initialize_board()
 
     def build_widgets(self):
         default_font = font.Font(family='Malgun Gothic', size=20)
@@ -42,11 +43,9 @@ class App:
         keep_label = ttk.Label(text='KEEP', anchor='center')
         keep_label.place(x=10, y=12, width=120, height=40)
 
-        self.keep_board = tk.Canvas(self.win, width=120, height=120, bg='white', relief='solid', bd=1)
-        for i in range(1, 4):
-            self.keep_board.create_line(0, 30*i, 120, 30*i, fill='light gray')
-            self.keep_board.create_line(30*i, 0, 30*i, 120, fill='light gray')
-        self.keep_board.place(x=8, y=60)
+        self.keep_board = MyCanvas(self.win, (117, 117), (30, 30))
+        self.keep_board.draw_grid(4, 4)
+        self.keep_board.place(8, 60)
 
         level_title = ttk.Label(text='LEVEL', anchor='center')
         level_title.place(x=10, y=500, width=120, height=40)
@@ -58,23 +57,17 @@ class App:
         self.line_label = ttk.Label(text=str(self.curr_hit) + '/' + str(self.goal_hit), anchor='e')
         self.line_label.place(x=10, y=650, width=120, height=40)
 
-        self.board = tk.Canvas(self.win, width=400, height=800, bg='white', relief='solid', bd=2)
-        self.board.place(x=140, y=10)
-
-        for y in range(1, 20):
-            self.board.create_line(0, 40 * y, 500, 40 * y, fill='light gray')
-        for x in range(1, 10):
-            self.board.create_line(40 * x, 0, 40 * x, 800, fill='light gray')
+        self.board = MyCanvas(self.win, (400, 800), (40, 40), border=2)
+        self.board.draw_grid(20, 10)
+        self.board.place(140, 10)
 
         next_label = ttk.Label(text='NEXT', anchor='center')
         next_label.place(x=552, y=12, width=120, height=40)
         for i in range(3):
-            self.next_board.append(tk.Canvas(self.win, width=120, height=120, bg='white', relief='solid', bd=1))
-            self.next_board[i].place(x=550, y=60+i*130)
+            self.next_board.append(MyCanvas(self.win, (117, 117), (30, 30)))
+            self.next_board[i].place(550, 60+i*130)
         for board in self.next_board:
-            for i in range(1, 4):
-                board.create_line(0, 30*i, 120, 30*i, fill='light gray')
-                board.create_line(30*i, 0, 30*i, 120, fill='light gray')
+            board.draw_grid(4, 4)
 
         time_title = ttk.Label(text='TIME', anchor='center')
         time_title.place(x=552, y=500, width=120, height=40)
@@ -90,13 +83,57 @@ class App:
         self.queue.clear()
         self.win.destroy()
 
+    def initialize_board(self):
+        for i in range(3):
+            self.fill_next_board(i)
+
+    def fill_next_board(self, idx):
+        color = self.queue[idx].color
+        for p in self.queue[idx].get_pos():
+            self.next_board[idx].draw_rectangle(p, color)
+
     def update(self):
         self.timer.tick()
         text = self.timer.formatted_time()
         self.time_label.configure(text=text)
+
+        if len(self.queue) < 3:
+            self.queue.append(Block())
+            self.fill_next_board(2)
+
         self.win.after(1, self.update)
+
+    def get_input(self, event=None):
+        if event and event.keysym == 'Escape':
+            self.destroy_all()
+        elif event and event.keysym == 'space':
+            self.queue.pop(0)
 
     def run(self):
         self.update()
         self.win.mainloop()
 
+
+class MyCanvas:
+    def __init__(self, master, size, block_size, border=1):
+        self.tw, self.th = size
+        self.bw, self.bh = block_size
+        self.canvas = tk.Canvas(master, width=self.tw, height=self.th, bg='white', relief='solid', bd=border)
+
+    def place(self, px, py):
+        self.canvas.place(x=px, y=py)
+
+    def draw_grid(self, rows, cols):
+        for i in range(1, rows):
+            self.canvas.create_line(2, self.bh*i, self.tw+2, self.bh*i, fill='light gray')
+        for j in range(1, cols):
+            self.canvas.create_line(self.bw*j, 2, self.bw*j, self.th+2, fill='light gray')
+
+    def draw_rectangle(self, p, color):
+        x, y = MyCanvas.calc_coord(30, p[0], p[1])
+        nx, ny = MyCanvas.calc_coord(30, p[0] + 1, p[1] + 1)
+        self.canvas.create_rectangle(x, y, nx, ny, fill=color)
+
+    @staticmethod
+    def calc_coord(size, r, c):
+        return size * c, size * r
