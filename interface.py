@@ -1,4 +1,3 @@
-import tkinter as tk
 import timer
 
 from tkinter import ttk
@@ -32,7 +31,7 @@ class App:
         self.queue = [Block() for _ in range(3)]
 
         self.build_widgets()
-        self.initialize_board()
+        self.fill_next_boards()
 
     def build_widgets(self):
         default_font = font.Font(family='Malgun Gothic', size=20)
@@ -57,7 +56,7 @@ class App:
         self.line_label = ttk.Label(text=str(self.curr_hit) + '/' + str(self.goal_hit), anchor='e')
         self.line_label.place(x=10, y=650, width=120, height=40)
 
-        self.board = MyCanvas(self.win, (400, 800), (40, 40), border=2)
+        self.board = MyCanvas(self.win, (400, 796), (40, 40), border=2)
         self.board.draw_grid(20, 10)
         self.board.place(140, 10)
 
@@ -83,23 +82,21 @@ class App:
         self.queue.clear()
         self.win.destroy()
 
-    def initialize_board(self):
+    def fill_next_boards(self):
         for i in range(3):
-            self.fill_next_board(i)
-
-    def fill_next_board(self, idx):
-        color = self.queue[idx].color
-        for p in self.queue[idx].get_pos():
-            self.next_board[idx].draw_rectangle(p, color)
+            self.next_board[i].clear()
+            self.next_board[i].draw_block(self.queue[i])
 
     def update(self):
         self.timer.tick()
-        text = self.timer.formatted_time()
-        self.time_label.configure(text=text)
+        text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
+        self.time_label.configure(text=text)  # 레이블을 업데이트한다.
 
         if len(self.queue) < 3:
-            self.queue.append(Block())
-            self.fill_next_board(2)
+            self.queue.append(Block())  # 큐에 새로운 블록을 넣고
+            self.fill_next_boards()     # 캔버스를 다시 그린다.
+
+        # self.board.move_block(0, self.level*50 * self.timer.get_elapsed())
 
         self.win.after(1, self.update)
 
@@ -108,32 +105,8 @@ class App:
             self.destroy_all()
         elif event and event.keysym == 'space':
             self.queue.pop(0)
+            pass
 
     def run(self):
         self.update()
         self.win.mainloop()
-
-
-class MyCanvas:
-    def __init__(self, master, size, block_size, border=1):
-        self.tw, self.th = size
-        self.bw, self.bh = block_size
-        self.canvas = tk.Canvas(master, width=self.tw, height=self.th, bg='white', relief='solid', bd=border)
-
-    def place(self, px, py):
-        self.canvas.place(x=px, y=py)
-
-    def draw_grid(self, rows, cols):
-        for i in range(1, rows):
-            self.canvas.create_line(2, self.bh*i, self.tw+2, self.bh*i, fill='light gray')
-        for j in range(1, cols):
-            self.canvas.create_line(self.bw*j, 2, self.bw*j, self.th+2, fill='light gray')
-
-    def draw_rectangle(self, p, color):
-        x, y = MyCanvas.calc_coord(30, p[0], p[1])
-        nx, ny = MyCanvas.calc_coord(30, p[0] + 1, p[1] + 1)
-        self.canvas.create_rectangle(x, y, nx, ny, fill=color)
-
-    @staticmethod
-    def calc_coord(size, r, c):
-        return size * c, size * r
