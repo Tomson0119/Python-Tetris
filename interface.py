@@ -56,8 +56,7 @@ class App:
         self.line_label = ttk.Label(text=str(self.curr_hit) + '/' + str(self.goal_hit), anchor='e')
         self.line_label.place(x=10, y=650, width=120, height=40)
 
-        self.board = MyCanvas(self.win, (400, 796), (40, 40), border=2)
-        self.board.draw_grid(20, 10)
+        self.board = Board(self.win, (400, 796), (40, 40), 10, 20)
         self.board.place(140, 10)
 
         next_label = ttk.Label(text='NEXT', anchor='center')
@@ -84,8 +83,10 @@ class App:
 
     def fill_next_boards(self):
         for i in range(3):
+            pos = self.queue[i].pos
+            color = self.queue[i].color
             self.next_board[i].clear()
-            self.next_board[i].draw_block(self.queue[i])
+            self.next_board[i].draw_block(pos, color)
 
     def update(self):
         self.timer.tick()
@@ -96,7 +97,8 @@ class App:
             self.queue.append(Block())  # 큐에 새로운 블록을 넣고
             self.fill_next_boards()     # 캔버스를 다시 그린다.
 
-        # self.board.move_block(0, self.level*50 * self.timer.get_elapsed())
+        self.board.update()
+        self.board.move(0, self.level*50 * self.timer.get_elapsed())
 
         self.win.after(1, self.update)
 
@@ -104,8 +106,7 @@ class App:
         if event and event.keysym == 'Escape':
             self.destroy_all()
         elif event and event.keysym == 'space':
-            self.queue.pop(0)
-            pass
+            self.board.insert(self.queue.pop(0))
 
     def run(self):
         self.update()
