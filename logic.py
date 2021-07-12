@@ -1,4 +1,5 @@
 import random
+from canvas import *
 
 
 class Block:
@@ -27,6 +28,15 @@ class Block:
     @property
     def color(self):
         return self.shape[4]
+
+
+class Board:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.board = [[0]*width for _ in range(height)]
+
+
 
 
 
