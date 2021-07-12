@@ -40,15 +40,20 @@ class Board:
         self.dx = 0
         self.dy = 0
 
+        self.target = [[0, 0] for _ in range(4)]
         self.board = [[0]*width for _ in range(height + 4)]
         self.canvas = MyCanvas(master, size, block_size, 2)
         self.canvas.draw_grid(height, width)
+
+        self.debug = DebugWin(master, self.board)
 
     def place(self, x, y):
         self.canvas.place(x, y)
 
     def insert(self, block):
         pos = move_coord(block.pos, -2, 3)
+        for i, p in enumerate(pos):
+            self.target[i] = [p[0]+4, p[1]]
         self.canvas.draw_block(pos, block.color)
 
     def accumulate_delta(self, dx, dy):
@@ -68,7 +73,9 @@ class Board:
         self.canvas.move(x, y)
 
     def update(self):
-        pass
+        for p in self.target:
+            self.board[p[0]][p[1]] = 1
+        self.debug.update(self.board)
 
     def print_board(self):
         for lst in self.board:
@@ -77,8 +84,28 @@ class Board:
             print()
 
 
+class DebugWin:
+    def __init__(self, master, board):
+        self.win = tk.Toplevel(master)
+        self.win.geometry('500x1000')
+        self.win.resizable(False, False)
+        self.win.title('DEBUG')
+        self.win.protocol('WM_DELETE_WINDOW', self.disable_quit)
 
+        self.rows = len(board)
+        self.cols = len(board[0])
 
+        self.canvas = MyCanvas(self.win, (400, 960), (40, 40))
+        self.canvas.draw_grid(self.rows, self.cols)
+        self.canvas.place(10, 10)
 
+    def disable_quit(self, event=None):
+        pass
 
-
+    def update(self, board):
+        self.canvas.clear()
+        self.canvas.canvas.create_line(2, 160, 402, 160, width=2)
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                if board[i][j] == 1:
+                    self.canvas.draw_block([[i, j]], 'gray')
