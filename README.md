@@ -14,7 +14,9 @@
 
 ### GUI
 * 게임 보드
+
 ![캡처](https://user-images.githubusercontent.com/70787160/125621082-42d2af0e-0613-431c-9a8b-7d3e0d9fc055.PNG)
 
 * 디버그 화면  
+
 ![캡처2](https://user-images.githubusercontent.com/70787160/125621092-2f292b33-298a-4d42-a3db-94cf05020156.PNG)
