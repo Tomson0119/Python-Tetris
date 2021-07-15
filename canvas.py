@@ -3,23 +3,22 @@ from util import *
 
 
 class MyCanvas:
-    def __init__(self, master, size, block_size, bd=1):
+    def __init__(self, master, size, block_size, row, col, bd=1):
         self.tw, self.th = size
         self.bw, self.bh = block_size
-        self.rows, self.cols = 0, 0
+        self.rows, self.cols = row, col
 
         self.canvas = tk.Canvas(master, width=self.tw, height=self.th, bg='white', relief='solid', bd=bd)
+        self.draw_grid()
         self.target = []
 
     def place(self, px, py):
         self.canvas.place(x=px, y=py)
 
-    def draw_grid(self, rows, cols):
-        self.rows = rows
-        self.cols = cols
-        for i in range(1, rows):
+    def draw_grid(self):
+        for i in range(1, self.rows):
             self.canvas.create_line(2, self.bh*i, self.tw+2, self.bh*i, fill='light gray')
-        for j in range(1, cols):
+        for j in range(1, self.cols):
             self.canvas.create_line(self.bw*j, 2, self.bw*j, self.th+2, fill='light gray')
 
     def draw_block(self, pos, color):
@@ -35,4 +34,4 @@ class MyCanvas:
 
     def clear(self):
         self.canvas.delete('all')
-        self.draw_grid(self.rows, self.cols)
+        self.draw_grid()
