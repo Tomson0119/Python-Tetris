@@ -15,24 +15,21 @@ class Block:
 
     def __init__(self):
         self.shape = Block.SHAPE[random.randint(1, 7)]
-        self.coord = []
+        self.pos = []
         for n in self.shape[:-1]:
             row = n // 4
             col = n % 4
-            self.coord.append([row, col])
+            self.pos.append([row, col])
+        self.stacked = False
 
     def move_coord(self, dx, dy):
-        for p in self.coord:
+        for p in self.pos:
             p[0] += dy
             p[1] += dx
 
     def get_bottom(self):
-        max_row = max(self.coord, key=lambda p: p[0])[0]
-        return [[r, c] for r, c in enumerate(self.coord) if r == max_row]
-
-    @property
-    def pos(self):
-        return self.coord
+        max_row = max(self.pos, key=lambda p: p[0])[0]
+        return [[r, c] for r, c in self.pos if r == max_row]
 
     @property
     def color(self):
@@ -43,20 +40,20 @@ class Logic:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = [[0] * width for _ in range(height)]
+        self.board = [[0] * width for _ in range(height + 4)]
 
-    def update(self):
-        pass
+    def update(self, block):
+        if block and block.stacked:
+            for p in block.pos:
+                self.board[p[0]+4][p[1]] = 1
 
     def check_board(self, curr, dx, dy):
         for p in curr:
-            nr = p[0] + dx
-            nc = p[1] + dy
-            if nr < 0 or nr >= self.height:
-                return False
-            if nc < 0 or nc >= self.width:
-                return False
-            if nr == 1 or nc == 1:
+            nr = p[0] + dy
+            nc = p[1] + dx
+            if nr >= self.height or \
+                    nc >= self.width or \
+                    self.board[nr+4][nc] == 1:
                 return False
         return True
 
@@ -70,11 +67,10 @@ class Board:
         self.dx = 0
         self.dy = 0
 
-        self.previous = None
         self.movable = None
         self.canvas = MyCanvas(master, size, block_size, row, col, 2)
 
-        self.logic = Logic(col, row + 4)
+        self.logic = Logic(col, row)
         self.debug = DebugWin(master, self.logic.board)
 
     def place(self, x, y):
@@ -82,7 +78,7 @@ class Board:
 
     def insert(self, block):
         self.movable = block
-        self.movable.move_coord(3, -2)
+        self.movable.move_coord(3, -4)
         self.canvas.draw_block(self.movable.pos, block.color)
 
     def accumulate_delta(self, dx, dy):
@@ -104,9 +100,16 @@ class Board:
             if self.logic.check_board(bottom, x, y):
                 self.canvas.move(x * self.bw, y * self.bh)
                 self.movable.move_coord(x, y)
+            else:
+                self.movable.stacked = True
+
+
+
+    def is_stacked(self):
+        return True if not self.movable else self.movable.stacked
 
     def update(self):
-        self.logic.update()
+        self.logic.update(self.movable)
         self.debug.update(self.logic.board)
 
 
