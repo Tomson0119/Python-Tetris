@@ -42,8 +42,7 @@ class App:
         keep_label = ttk.Label(text='KEEP', anchor='center')
         keep_label.place(x=10, y=12, width=120, height=40)
 
-        self.keep_board = MyCanvas(self.win, (117, 117), (30, 30))
-        self.keep_board.draw_grid(4, 4)
+        self.keep_board = MyCanvas(self.win, (117, 117), (30, 30), 4, 4)
         self.keep_board.place(8, 60)
 
         level_title = ttk.Label(text='LEVEL', anchor='center')
@@ -56,16 +55,14 @@ class App:
         self.line_label = ttk.Label(text=str(self.curr_hit) + '/' + str(self.goal_hit), anchor='e')
         self.line_label.place(x=10, y=650, width=120, height=40)
 
-        self.board = Board(self.win, (400, 796), (40, 40), 10, 20)
+        self.board = Board(self.win, (400, 796), (40, 40), 20, 10)
         self.board.place(140, 10)
 
         next_label = ttk.Label(text='NEXT', anchor='center')
         next_label.place(x=552, y=12, width=120, height=40)
         for i in range(3):
-            self.next_board.append(MyCanvas(self.win, (117, 117), (30, 30)))
+            self.next_board.append(MyCanvas(self.win, (117, 117), (30, 30), 4, 4))
             self.next_board[i].place(550, 60+i*130)
-        for board in self.next_board:
-            board.draw_grid(4, 4)
 
         time_title = ttk.Label(text='TIME', anchor='center')
         time_title.place(x=552, y=500, width=120, height=40)
@@ -93,12 +90,8 @@ class App:
         text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
         self.time_label.configure(text=text)  # 레이블을 업데이트한다.
 
-        if len(self.queue) < 3:
-            self.queue.append(Block())  # 큐에 새로운 블록을 넣고
-            self.fill_next_boards()     # 캔버스를 다시 그린다.
-
         self.board.update()
-        self.board.move(0, self.level*50 * self.timer.get_elapsed())
+        self.board.move_block(0, self.level*50 * self.timer.get_elapsed())
 
         self.win.after(1, self.update)
 
@@ -107,6 +100,8 @@ class App:
             self.destroy_all()
         elif event and event.keysym == 'space':
             self.board.insert(self.queue.pop(0))
+            self.queue.append(Block())  # 큐에 새로운 블록을 넣고
+            self.fill_next_boards()  # 캔버스를 다시 그린다.
 
     def run(self):
         self.update()
