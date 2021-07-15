@@ -90,8 +90,13 @@ class App:
         text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
         self.time_label.configure(text=text)  # 레이블을 업데이트한다.
 
-        self.board.update()
         self.board.move_block(0, self.level*50 * self.timer.get_elapsed())
+        self.board.update()
+
+        if self.board.is_stacked():
+            self.board.insert(self.queue.pop(0))
+            self.queue.append(Block())  # 큐에 새로운 블록을 넣고
+            self.fill_next_boards()  # 캔버스를 다시 그린다.
 
         self.win.after(1, self.update)
 
@@ -99,9 +104,7 @@ class App:
         if event and event.keysym == 'Escape':
             self.destroy_all()
         elif event and event.keysym == 'space':
-            self.board.insert(self.queue.pop(0))
-            self.queue.append(Block())  # 큐에 새로운 블록을 넣고
-            self.fill_next_boards()  # 캔버스를 다시 그린다.
+            pass
 
     def run(self):
         self.update()
