@@ -3,23 +3,29 @@ from canvas import *
 
 
 class Block:
-    # 1: I, 2: S, 3: Z, 4: T, 5: L, 6: J, 7: O
     #  0  1  2  3
     #  4  5  6  7
     #  8  9 10 11
     # 12 13 14 15
-    SHAPE = {1: [12, 13, 14, 15, 'skyblue'], 2: [10, 11, 13, 14, 'green'],
-             3: [9, 10, 14, 15, 'red'], 4: [10, 13, 14, 15, 'purple'],
-             5: [11, 13, 14, 15, 'orange'], 6: [9, 13, 14, 15, 'blue'],
-             7: [10, 11, 14, 15, 'yellow']}
+    SHAPE = {1: 'I', 2: 'S', 3: 'Z', 4: 'T', 5: 'L', 6: 'J', 7: 'O'}
+    SHAPE_INFO = {'I': [12, 13, 14, 15, 'skyblue'], 'S': [10, 11, 14, 13, 'green'],
+                  'Z': [9, 10, 14, 15, 'red'],      'T': [10, 13, 14, 15, 'purple'],
+                  'L': [11, 13, 14, 15, 'orange'],  'J': [9, 13, 14, 15, 'blue'],
+                  'O': [10, 11, 14, 15, 'yellow']}
+    COUNTERCLOCKWISE = {(-1 + i, -1 + j): (2-i-j, 0+i-j) for i in range(3) for j in range(3)}
+    CLOCKWISE = {(-1 + i, -1 + j): (0-i+j, 2-i-j) for i in range(3) for j in range(3)}
 
     def __init__(self):
         self.shape = Block.SHAPE[random.randint(1, 7)]
+        self.info = Block.SHAPE_INFO[self.shape]
+        self.color = self.info[4]
+
         self.pos = []
-        for n in self.shape[:-1]:
+        for n in self.info[:-1]:
             row = n // 4
             col = n % 4
             self.pos.append([row, col])
+
         self.stacked = False
 
     def move_coord(self, dx, dy):
@@ -27,13 +33,27 @@ class Block:
             p[0] += dy
             p[1] += dx
 
+    def rotate_coord(self, delta):
+        assert len(delta) == len(self.pos)
+
+        for i in range(len(delta)):
+            self.pos[i][0] += delta[i][0]
+            self.pos[i][1] += delta[i][1]
+
     def get_bottom(self):
         max_row = max(self.pos, key=lambda p: p[0])[0]
         return [[r, c] for r, c in self.pos if r == max_row]
 
-    @property
-    def color(self):
-        return self.shape[4]
+    def get_rotate_diff(self, clockwise):
+        ret = []
+        center = self.pos[2]
+        for p in self.pos:
+            sub = sub_coord(p, center)
+            if clockwise:
+                ret.append(Block.CLOCKWISE[sub])
+            else:
+                ret.append(Block.COUNTERCLOCKWISE[sub])
+        return ret
 
 
 class Logic:
@@ -45,15 +65,27 @@ class Logic:
     def update(self, block):
         if block and block.stacked:
             for p in block.pos:
-                self.board[p[0]+4][p[1]] = 1
+                self.board[p[0] + 4][p[1]] = 1
 
-    def check_board(self, curr, dx, dy):
+    def check_valid(self, p, dx, dy):
+        nr = p[0] + dy
+        nc = p[1] + dx
+        if nr >= self.height or \
+                nc < 0 or nc >= self.width or \
+                self.board[nr + 4][nc] == 1:
+            return False
+        return True
+
+    def check_move(self, curr, dx, dy):
         for p in curr:
-            nr = p[0] + dy
-            nc = p[1] + dx
-            if nr >= self.height or \
-                    nc < 0 or nc >= self.width or \
-                    self.board[nr+4][nc] == 1:
+            if not self.check_valid(p, dx, dy):
+                return False
+        return True
+
+    def check_rotate(self, curr, delta):
+        assert len(curr) == len(delta)
+        for i in range(len(curr)):
+            if not self.check_valid(curr[i], delta[i][1], delta[i][0]):
                 return False
         return True
 
@@ -75,7 +107,7 @@ class Board:
         self.logic = Logic(col, row)
         self.debug = DebugWin(master, self.logic.board)
 
-        self.pressed = {'Left': False, 'Right': False, 'Down': False}
+        self.pressed = {'Left': False, 'Right': False, 'Down': False, 'z': False, 'x': False}
 
     def place(self, x, y):
         self.canvas.place(x, y)
@@ -88,7 +120,7 @@ class Board:
     def fall(self, dy):
         if self.movable:
             self.df, y = accumulate_delta(self.df, self.bh, dy)
-            if self.logic.check_board(self.movable.pos, 0, y):
+            if self.logic.check_move(self.movable.pos, 0, y):
                 self.canvas.move(0, y * self.bh)
                 self.movable.move_coord(0, y)
             else:
@@ -98,31 +130,40 @@ class Board:
         if self.movable:
             self.dx, x = accumulate_delta(self.dx, self.bw, dx)
             self.dy, y = accumulate_delta(self.dy, self.bh, dy)
-            if self.logic.check_board(self.movable.pos, x, y):
-                self.canvas.move(x*self.bw, y*self.bh)
+            if self.logic.check_move(self.movable.pos, x, y):
+                self.canvas.move(x * self.bw, y * self.bh)
                 self.movable.move_coord(x, y)
 
-    def process_key(self, key, pressed):
-        if pressed:
-            if key == 'Left' and not self.pressed[key]:
-                self.pressed[key] = True
-                self.mx -= 1
-            if key == 'Right' and not self.pressed[key]:
-                self.pressed[key] = True
-                self.mx += 1
-            if key == 'Down' and not self.pressed[key]:
-                self.pressed[key] = True
-                self.my = 1
+    def rotate_block(self, clockwise):
+        if self.movable.shape != 'O':
+            delta = self.movable.get_rotate_diff(clockwise)
+            if not self.logic.check_rotate(self.movable.pos, delta):
+                print('WOW')
+                return
+            self.movable.rotate_coord(delta)
+            self.canvas.redraw_block(self.movable.pos, self.movable.color)
 
-        else:
-            if key == 'Left' and self.pressed[key]:
-                self.pressed[key] = False
-                self.mx += 1
-            if key == 'Right' and self.pressed[key]:
-                self.pressed[key] = False
+    def process_key(self, key, pressed):
+        if pressed and key in self.pressed.keys() and not self.pressed[key]:
+            self.pressed[key] = True
+            if key == 'Left':
                 self.mx -= 1
-            if key == 'Down' and self.pressed[key]:
-                self.pressed[key] = False
+            if key == 'Right':
+                self.mx += 1
+            if key == 'Down':
+                self.my = 1
+            if key == 'z':
+                self.rotate_block(clockwise=False)
+            if key == 'x':
+                self.rotate_block(clockwise=True)
+
+        elif not pressed and key in self.pressed.keys() and self.pressed[key]:
+            self.pressed[key] = False
+            if key == 'Left':
+                self.mx += 1
+            if key == 'Right':
+                self.mx -= 1
+            if key == 'Down':
                 self.my = 0
 
     def is_stacked(self):
