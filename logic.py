@@ -52,7 +52,7 @@ class Logic:
             nr = p[0] + dy
             nc = p[1] + dx
             if nr >= self.height or \
-                    nc >= self.width or \
+                    nc < 0 or nc >= self.width or \
                     self.board[nr+4][nc] == 1:
                 return False
         return True
