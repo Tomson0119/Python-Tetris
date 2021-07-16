@@ -28,6 +28,11 @@ class MyCanvas:
             nx, ny = calc_coord(self.bw, self.bh, pp[0] + 1, pp[1] + 1)
             self.target.append(self.canvas.create_rectangle(x, y, nx, ny, fill=color))
 
+    def redraw_block(self, new_pos, color):
+        for block in self.target:
+            self.canvas.delete(block)
+        self.draw_block(new_pos, color)
+
     def move(self, x, y):
         for block in self.target:
             self.canvas.move(block, x, y)
