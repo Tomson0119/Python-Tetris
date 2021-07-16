@@ -66,12 +66,16 @@ class Board:
 
         self.dx = 0
         self.dy = 0
+        self.df = 0  # Fall
+        self.mx, self.my = 0, 0
 
         self.movable = None
         self.canvas = MyCanvas(master, size, block_size, row, col, 2)
 
         self.logic = Logic(col, row)
         self.debug = DebugWin(master, self.logic.board)
+
+        self.pressed = {'Left': False, 'Right': False, 'Down': False}
 
     def place(self, x, y):
         self.canvas.place(x, y)
@@ -81,34 +85,51 @@ class Board:
         self.movable.move_coord(3, -4)
         self.canvas.draw_block(self.movable.pos, block.color)
 
-    def accumulate_delta(self, dx, dy):
-        self.dx += dx
-        self.dy += dy
-        move_x, move_y = 0, 0
-        if self.dx >= self.bw:
-            self.dx = 0
-            move_x = 1
-        if self.dy >= self.bh:
-            self.dy = 0
-            move_y = 1
-        return move_x, move_y
-
-    def move_block(self, dx, dy):
+    def fall(self, dy):
         if self.movable:
-            x, y = self.accumulate_delta(dx, dy)
-            bottom = self.movable.get_bottom()
-            if self.logic.check_board(bottom, x, y):
-                self.canvas.move(x * self.bw, y * self.bh)
-                self.movable.move_coord(x, y)
+            self.df, y = accumulate_delta(self.df, self.bh, dy)
+            if self.logic.check_board(self.movable.pos, 0, y):
+                self.canvas.move(0, y * self.bh)
+                self.movable.move_coord(0, y)
             else:
                 self.movable.stacked = True
 
+    def move_block(self, dx, dy):
+        if self.movable:
+            self.dx, x = accumulate_delta(self.dx, self.bw, dx)
+            self.dy, y = accumulate_delta(self.dy, self.bh, dy)
+            if self.logic.check_board(self.movable.pos, x, y):
+                self.canvas.move(x*self.bw, y*self.bh)
+                self.movable.move_coord(x, y)
 
+    def process_key(self, key, pressed):
+        if pressed:
+            if key == 'Left' and not self.pressed[key]:
+                self.pressed[key] = True
+                self.mx -= 1
+            if key == 'Right' and not self.pressed[key]:
+                self.pressed[key] = True
+                self.mx += 1
+            if key == 'Down' and not self.pressed[key]:
+                self.pressed[key] = True
+                self.my = 1
+
+        else:
+            if key == 'Left' and self.pressed[key]:
+                self.pressed[key] = False
+                self.mx += 1
+            if key == 'Right' and self.pressed[key]:
+                self.pressed[key] = False
+                self.mx -= 1
+            if key == 'Down' and self.pressed[key]:
+                self.pressed[key] = False
+                self.my = 0
 
     def is_stacked(self):
         return True if not self.movable else self.movable.stacked
 
-    def update(self):
+    def update(self, elapsed):
+        self.move_block(self.mx * 800 * elapsed, self.my * 600 * elapsed)
         self.logic.update(self.movable)
         self.debug.update(self.logic.board)
 
