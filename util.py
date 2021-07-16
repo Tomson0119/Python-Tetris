@@ -12,3 +12,7 @@ def accumulate_delta(delta, max_val, val):
 
 def calc_coord(w, h, r, c):
     return w * c, h * r
+
+
+def sub_coord(a, b):
+    return a[0] - b[0], a[1] - b[1]
