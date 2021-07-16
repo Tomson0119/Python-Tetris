@@ -12,7 +12,8 @@ class App:
         self.win.geometry('685x820')
         self.win.resizable(False, False)
         self.win.title('TETRIS')
-        self.win.bind('<Key>', self.get_input)
+        self.win.bind('<KeyPress>', self.key_pressed)
+        self.win.bind('<KeyRelease>', self.key_released)
 
         self.level_label = None
         self.line_label = None
@@ -90,8 +91,8 @@ class App:
         text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
         self.time_label.configure(text=text)  # 레이블을 업데이트한다.
 
-        self.board.move_block(0, self.level*50 * self.timer.get_elapsed())
-        self.board.update()
+        self.board.fall(self.level*50 * self.timer.get_elapsed())
+        self.board.update(self.timer.get_elapsed())
 
         if self.board.is_stacked():
             self.board.insert(self.queue.pop(0))
@@ -100,11 +101,16 @@ class App:
 
         self.win.after(1, self.update)
 
-    def get_input(self, event=None):
-        if event and event.keysym == 'Escape':
-            self.destroy_all()
-        elif event and event.keysym == 'space':
-            pass
+    def key_pressed(self, event=None):
+        if event:
+            if event.keysym == 'Escape':
+                self.destroy_all()
+            else:
+                self.board.process_key(event.keysym, True)
+
+    def key_released(self, event=None):
+        if event:
+            self.board.process_key(event.keysym, False)
 
     def run(self):
         self.update()
