@@ -56,7 +56,7 @@ class App:
         self.line_label = ttk.Label(text=str(self.curr_hit) + '/' + str(self.goal_hit), anchor='e')
         self.line_label.place(x=10, y=650, width=120, height=40)
 
-        self.board = Board(self.win, (400, 796), (40, 40), 20, 10)
+        self.board = Board(self.win, (396, 796), (40, 40), 20, 10)
         self.board.place(140, 10)
 
         next_label = ttk.Label(text='NEXT', anchor='center')
