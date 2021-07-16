@@ -124,7 +124,7 @@ class DebugWin:
         self.rows = len(board)
         self.cols = len(board[0])
 
-        self.canvas = MyCanvas(self.win, (400, 960), (40, 40), self.rows, self.cols)
+        self.canvas = MyCanvas(self.win, (396, 960), (40, 40), self.rows, self.cols)
         self.canvas.place(10, 10)
 
     def disable_quit(self, event=None):
