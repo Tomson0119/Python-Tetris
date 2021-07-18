@@ -194,7 +194,11 @@ class Board:
 
     def instant_move(self):
         prev_pos = self.preview_pos()
-        
+        dy = prev_pos[0][0] - self.movable.pos[0][0]
+        self.canvas.move(0, dy * self.bh)
+        self.movable.move_coord(0, dy)
+        self.movable.stacked = True
+
     def process_key(self, key, pressed):
         if pressed and key in self.pressed.keys() and not self.pressed[key]:
             self.pressed[key] = True
