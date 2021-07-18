@@ -179,18 +179,22 @@ class Board:
             self.dx, x = accumulate_delta(self.dx, self.bw, dx)
             self.dy, y = accumulate_delta(self.dy, self.bh, dy)
             if self.logic.check_move(self.movable.pos, x, y):
-                self.canvas.move(x * self.bw, y * self.bh)
+                prev_pos = self.preview_pos()
+                self.canvas.move(x * self.bw, y * self.bh, self.preview_pos())
                 self.movable.move_coord(x, y)
+                if prev_pos == self.movable.pos:
+                    self.canvas.delete_preview()
 
     def rotate_block(self, clockwise):
-        if self.movable.shape != 'O':
-            delta = self.movable.get_rotate_diff(clockwise)
-            if not self.logic.check_rotate(self.movable.pos, delta):
-                print('WOW')
-                return
-            self.movable.rotate_coord(delta)
-            self.canvas.redraw_block(self.movable.pos, self.movable.color)
+        delta = self.movable.get_rotate_delta(clockwise)
+        adjust = self.logic.check_rotate(self.movable.pos, delta)
+        self.movable.rotate_coord(delta)
+        self.movable.move_coord(*adjust)
+        self.canvas.redraw_block(self.movable.pos)
 
+    def instant_move(self):
+        prev_pos = self.preview_pos()
+        
     def process_key(self, key, pressed):
         if pressed and key in self.pressed.keys() and not self.pressed[key]:
             self.pressed[key] = True
@@ -200,10 +204,13 @@ class Board:
                 self.mx += 1
             if key == 'Down':
                 self.my = 1
+                self.df = 0
             if key == 'z':
                 self.rotate_block(clockwise=False)
             if key == 'x':
                 self.rotate_block(clockwise=True)
+            if key == 'c':
+                self.instant_move()
 
         elif not pressed and key in self.pressed.keys() and self.pressed[key]:
             self.pressed[key] = False
@@ -214,12 +221,23 @@ class Board:
             if key == 'Down':
                 self.my = 0
 
+    def check_lines(self):
+        for i in range(self.rows - 1, self.logic.top + 1, -1):
+            if self.logic.lined_up(i):
+                for j in range(i-1, self.logic.top+1, -1):
+                    if not self.logic.lined_up(j):
+                        print('move ', j, ' to ', i)
+                        self.logic.move_line(j, i)
+                        self.canvas.move_line(j, i)
+                        break
+
     def is_stacked(self):
         return True if not self.movable else self.movable.stacked
 
     def update(self, elapsed):
         self.move_block(self.mx * 800 * elapsed, self.my * 600 * elapsed)
         self.logic.update(self.movable)
+        self.check_lines()
         self.debug.update(self.logic.board)
 
 
