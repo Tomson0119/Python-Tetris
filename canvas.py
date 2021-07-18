@@ -15,7 +15,7 @@ class MyCanvas:
 
         self.target = []
         self.preview = []
-        self.blocks = [[None]*self.cols for _ in range(self.rows)]
+        self.stacked = [[None]*self.cols for _ in range(self.rows)]
 
     def place(self, px, py):
         self.canvas.place(x=px, y=py)
@@ -34,7 +34,6 @@ class MyCanvas:
             nx, ny = calc_coord(self.bw, self.bh, pp[0] + 1, pp[1] + 1)
             rect = self.canvas.create_rectangle(x, y, nx, ny, fill=color)
             self.target.append(rect)
-            self.blocks[pp[0]][pp[1]] = rect
 
         if preview:
             self.draw_block_border(preview)
@@ -47,17 +46,16 @@ class MyCanvas:
             self.preview.append(self.canvas.create_rectangle(x, y, nx, ny, fill='', outline=self.color, width=2))
 
     def redraw_block(self, new_pos):
-        for block in self.target:
-            self.canvas.delete(block)
+        self.delete_object(self.target)
         self.draw_block(new_pos, self.color)
 
     def redraw_prev(self, new_pos):
-        self.delete_preview()
+        self.delete_object(self.preview)
         self.draw_block_border(new_pos)
 
-    def delete_preview(self):
-        for prev in self.preview:
-            self.canvas.delete(prev)
+    def delete_object(self, objects):
+        for obj in objects:
+            self.canvas.delete(obj)
 
     def move(self, x, y, view=None):
         for block, prev in zip(self.target, self.preview):
@@ -66,9 +64,16 @@ class MyCanvas:
         if view:
             self.redraw_prev(view)
 
+    def add_stacked(self, pos):
+        self.delete_object(self.preview)
+        for i in range(len(pos)):
+            self.stacked[pos[i][0]][pos[i][1]] = self.target[i]
+
     def move_line(self, src, dst):
-        for block in self.blocks[src]:
-            self.canvas.move(block, 0, self.bh*(dst-src))
+        self.delete_object(self.stacked[dst])
+        for block in self.stacked[src]:
+            if block:
+                self.canvas.move(block, 0, self.bh*(dst-src))
 
     def clear(self):
         self.canvas.delete('all')
