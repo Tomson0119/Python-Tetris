@@ -9,11 +9,11 @@ class Block:
     # 12 13 14 15
     SHAPE = {1: 'I', 2: 'S', 3: 'Z', 4: 'T', 5: 'L', 6: 'J', 7: 'O'}
     SHAPE_INFO = {'I': [12, 13, 14, 15, 'skyblue'], 'S': [10, 11, 14, 13, 'green'],
-                  'Z': [9, 10, 14, 15, 'red'],      'T': [10, 13, 14, 15, 'purple'],
-                  'L': [11, 13, 14, 15, 'orange'],  'J': [9, 13, 14, 15, 'blue'],
+                  'Z': [9, 10, 14, 15, 'red'], 'T': [10, 13, 14, 15, 'purple'],
+                  'L': [11, 13, 14, 15, 'orange'], 'J': [9, 13, 14, 15, 'blue'],
                   'O': [10, 11, 14, 15, 'yellow']}
-    COUNTERCLOCKWISE = {(-1 + i, -1 + j): (2-i-j, 0+i-j) for i in range(3) for j in range(3)}
-    CLOCKWISE = {(-1 + i, -1 + j): (0-i+j, 2-i-j) for i in range(3) for j in range(3)}
+    COUNTERCLOCKWISE = {(-1 + i, -1 + j): (2 - i - j, 0 + i - j) for i in range(3) for j in range(3)}
+    CLOCKWISE = {(-1 + i, -1 + j): (0 - i + j, 2 - i - j) for i in range(3) for j in range(3)}
 
     def __init__(self):
         self.shape = Block.SHAPE[random.randint(1, 7)]
@@ -26,6 +26,7 @@ class Block:
             col = n % 4
             self.pos.append([row, col])
 
+        self.vertical = False  # shape: I, S, Z
         self.stacked = False
 
     def move_coord(self, dx, dy):
@@ -35,25 +36,36 @@ class Block:
 
     def rotate_coord(self, delta):
         assert len(delta) == len(self.pos)
-
+        self.vertical = not self.vertical
         for i in range(len(delta)):
             self.pos[i][0] += delta[i][0]
             self.pos[i][1] += delta[i][1]
 
-    def get_bottom(self):
-        max_row = max(self.pos, key=lambda p: p[0])[0]
-        return [[r, c] for r, c in self.pos if r == max_row]
+    def get_bottom_row(self):
+        return max(self.pos, key=lambda p: p[0])[0]
 
-    def get_rotate_diff(self, clockwise):
+    def get_diff(self, val):
         ret = []
         center = self.pos[2]
         for p in self.pos:
             sub = sub_coord(p, center)
-            if clockwise:
-                ret.append(Block.CLOCKWISE[sub])
-            else:
+            if val:
                 ret.append(Block.COUNTERCLOCKWISE[sub])
+            else:
+                ret.append(Block.CLOCKWISE[sub])
         return ret
+
+    def get_rotate_delta(self, clockwise):
+        diff = []
+        if self.shape not in ['I', 'S', 'Z']:
+            diff = self.get_diff(clockwise)
+        elif self.shape in ['S', 'Z']:
+            diff = self.get_diff(self.vertical)
+        elif self.shape == 'I':
+            k = 1 if self.vertical else -1
+            for i in range(4):
+                diff.append((k*(2 - i), k*(-2 + i)))
+        return diff
 
 
 class Logic:
@@ -61,10 +73,12 @@ class Logic:
         self.width = width
         self.height = height
         self.board = [[0] * width for _ in range(height + 4)]
+        self.top = height
 
     def update(self, block):
         if block and block.stacked:
             for p in block.pos:
+                self.top = p[0] if self.top > p[0] else self.top
                 self.board[p[0] + 4][p[1]] = 1
 
     def check_valid(self, p, dx, dy):
