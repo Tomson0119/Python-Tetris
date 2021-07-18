@@ -183,7 +183,7 @@ class Board:
                 self.canvas.move(x * self.bw, y * self.bh, self.preview_pos())
                 self.movable.move_coord(x, y)
                 if prev_pos == self.movable.pos:
-                    self.canvas.delete_preview()
+                    self.canvas.add_stacked(self.movable.pos)
 
     def rotate_block(self, clockwise):
         delta = self.movable.get_rotate_delta(clockwise)
@@ -226,9 +226,9 @@ class Board:
                 self.my = 0
 
     def check_lines(self):
-        for i in range(self.rows - 1, self.logic.top + 1, -1):
+        for i in range(self.rows - 1, self.logic.top - 1, -1):
             if self.logic.lined_up(i):
-                for j in range(i-1, self.logic.top+1, -1):
+                for j in range(i-1, self.logic.top - 1, -1):
                     if not self.logic.lined_up(j):
                         print('move ', j, ' to ', i)
                         self.logic.move_line(j, i)
