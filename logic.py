@@ -146,7 +146,7 @@ class Board:
         self.logic = Logic(col, row)
         self.debug = DebugWin(master, self.logic.board)
 
-        self.pressed = {'Left': False, 'Right': False, 'Down': False, 'z': False, 'x': False}
+        self.pressed = {'Left': False, 'Right': False, 'Down': False, 'z': False, 'x': False, 'c': False}
 
     def place(self, x, y):
         self.canvas.place(x, y)
@@ -154,7 +154,16 @@ class Board:
     def insert(self, block):
         self.movable = block
         self.movable.move_coord(3, -4)
-        self.canvas.draw_block(self.movable.pos, block.color)
+        self.canvas.draw_block(self.movable.pos, block.color, self.preview_pos())
+
+    def preview_pos(self):
+        i = 0
+        while True:
+            if not self.logic.check_move(self.movable.pos, 0, i):
+                i = i - 1
+                break
+            i += 1
+        return [[r+i, c] for r, c in self.movable.pos]
 
     def fall(self, dy):
         if self.movable:
