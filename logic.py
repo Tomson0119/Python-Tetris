@@ -98,10 +98,35 @@ class Logic:
 
     def check_rotate(self, curr, delta):
         assert len(curr) == len(delta)
+        center = curr[2]
+        adjust_x, adjust_y = 0, 0
         for i in range(len(curr)):
-            if not self.check_valid(curr[i], delta[i][1], delta[i][0]):
+            nr = curr[i][0] + delta[i][0]
+            nc = curr[i][1] + delta[i][1]
+            if nc < 0:
+                adjust_x = 1
+            elif nc >= self.width:
+                adjust_x = nc - self.width - 1
+            elif nr >= self.height:
+                adjust_y = nr - self.height - 1
+
+            elif self.board[nr+4][nc] == 1:
+                if self.board[nr+4][center[1]] == 1:
+                    adjust_y = -1
+                elif self.board[center[0]+4][nc] == 1:
+                    adjust_x = 1 if center[1] > nc else -1
+        return [adjust_x, adjust_y]
+
+    def lined_up(self, r):
+        for i in range(self.width):
+            if self.board[r+4][i] != 1:
                 return False
         return True
+
+    def move_line(self, src, dst):
+        for i in range(self.width):
+            self.board[dst+4][i] = self.board[src+4][i]
+            self.board[src+4][i] = 0
 
 
 class Board:
