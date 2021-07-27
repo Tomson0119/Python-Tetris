@@ -115,16 +115,20 @@ class Logic:
                     adjust_x = 1 if center[1] > nc else -1
         return [adjust_x, adjust_y]
 
-    def lined_up(self, r):
-        for i in range(self.width):
-            if self.board[r+4][i] != 1:
+    def check_line(self, row):
+        for c in range(self.width):
+            if self.board[row+4][c] == 0:
                 return False
         return True
 
-    def move_line(self, src, dst):
-        for i in range(self.width):
-            self.board[dst+4][i] = self.board[src+4][i]
-            self.board[src+4][i] = 0
+    def drop_line(self, hits):
+        i = 0
+        for row in range(hits[0], -1, -1):
+            if row in hits:
+                i += 1
+            else:
+                self.board[row+4+i] = self.board[row+4]
+            self.board[row + 4] = [0] * self.width
 
 
 class Board:
@@ -224,14 +228,13 @@ class Board:
                 self.my = 0
 
     def check_lines(self):
-        for i in range(self.rows - 1, self.logic.top - 1, -1):
-            if self.logic.lined_up(i):
-                for j in range(i-1, self.logic.top - 1, -1):
-                    if not self.logic.lined_up(j):
-                        print('move ', j, ' to ', i)
-                        self.logic.move_line(j, i)
-                        self.canvas.move_line(j, i)
-                        break
+        hit_lines = []
+        for r in range(self.rows-1, -1, -1):
+            if self.logic.check_line(r):
+                hit_lines.append(r)
+        if hit_lines:
+            self.logic.drop_line(hit_lines)
+            self.canvas.drop_line(hit_lines)
 
     def is_stacked(self):
         return True if not self.movable else self.movable.stacked
