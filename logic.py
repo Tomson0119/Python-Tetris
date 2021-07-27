@@ -73,12 +73,10 @@ class Logic:
         self.width = width
         self.height = height
         self.board = [[0] * width for _ in range(height + 4)]
-        self.top = height
 
     def update(self, block):
         if block and block.stacked:
             for p in block.pos:
-                self.top = p[0] if self.top > p[0] else self.top
                 self.board[p[0] + 4][p[1]] = 1
 
     def check_valid(self, p, dx, dy):
