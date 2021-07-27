@@ -58,7 +58,7 @@ class MyCanvas:
             self.canvas.delete(obj)
 
     def move(self, x, y, view=None):
-        for block, prev in zip(self.target, self.preview):
+        for block in self.target:
             self.canvas.move(block, x, y)
             self.canvas.tag_raise(block)
         if view:
@@ -69,11 +69,20 @@ class MyCanvas:
         for i in range(len(pos)):
             self.stacked[pos[i][0]][pos[i][1]] = self.target[i]
 
-    def move_line(self, src, dst):
-        self.delete_object(self.stacked[dst])
-        for block in self.stacked[src]:
-            if block:
-                self.canvas.move(block, 0, self.bh*(dst-src))
+    def drop_line(self, hits):
+        i = 0
+        for row in range(hits[0], -1, -1):
+            if row in hits:
+                i += 1
+                for col in range(self.cols):
+                    self.delete_object(self.stacked[row])
+            else:
+                for block in self.stacked[row]:
+                    if block:
+                        self.canvas.move(block, 0, self.bh*i)
+                self.stacked[row + i] = self.stacked[row]
+            self.stacked[row] = [None] * self.rows
+
 
     def clear(self):
         self.canvas.delete('all')
