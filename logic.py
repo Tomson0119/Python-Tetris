@@ -148,7 +148,7 @@ class Board:
         self.logic = Logic(col, row)
         self.debug = DebugWin(master, self.logic.board)
 
-        self.pressed = {'Left': False, 'Right': False, 'Down': False, 'z': False, 'x': False, 'c': False}
+        self.pressed = {'Left': False, 'Right': False, 'Down': False, 'z': False, 'x': False, 'Up': False}
 
     def place(self, x, y):
         self.canvas.place(x, y)
@@ -215,7 +215,7 @@ class Board:
                 self.rotate_block(clockwise=False)
             if key == 'x':
                 self.rotate_block(clockwise=True)
-            if key == 'c':
+            if key == 'Up':
                 self.instant_move()
 
         elif not pressed and key in self.pressed.keys() and self.pressed[key]:
