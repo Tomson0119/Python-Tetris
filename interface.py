@@ -1,4 +1,5 @@
 import timer
+import copy
 
 from tkinter import ttk
 from tkinter import font
@@ -27,6 +28,7 @@ class App:
         self.goal_hit = 10
         self.curr_hit = 0
         self.score = 0
+        self.curr_block = None
 
         self.timer = timer.Timer()
         self.queue = [Block() for _ in range(3)]
@@ -86,6 +88,11 @@ class App:
             self.next_board[i].clear()
             self.next_board[i].draw_block(pos, color)
 
+    def keep_block(self):
+        if self.curr_block:
+            self.keep_board.clear()
+            self.keep_board.draw_block(self.curr_block.pos, self.curr_block.color)
+
     def update(self):
         self.timer.tick()
         text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
@@ -95,7 +102,8 @@ class App:
         self.board.update(self.timer.get_elapsed())
 
         if self.board.is_stacked():
-            self.board.insert(self.queue.pop(0))
+            self.curr_block = self.queue.pop(0)
+            self.board.insert(copy.deepcopy(self.curr_block))
             self.queue.append(Block())  # 큐에 새로운 블록을 넣고
             self.fill_next_boards()  # 캔버스를 다시 그린다.
 
@@ -105,6 +113,8 @@ class App:
         if event:
             if event.keysym == 'Escape':
                 self.destroy_all()
+            if event.keysym == 'c':
+                self.keep_block()
             else:
                 self.board.process_key(event.keysym, True)
 
