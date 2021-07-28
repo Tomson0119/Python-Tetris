@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import PhotoImage
 from util import *
 
 
@@ -16,6 +17,10 @@ class MyCanvas:
         self.target = []
         self.preview = []
         self.stacked = [[None]*self.cols for _ in range(self.rows)]
+
+        colors = ['red', 'green', 'orange', 'purple', 'blue', 'skyblue', 'yellow']
+        self.photo = {}
+
 
     def place(self, px, py):
         self.canvas.place(x=px, y=py)
@@ -82,7 +87,6 @@ class MyCanvas:
                         self.canvas.move(block, 0, self.bh*i)
                 self.stacked[row + i] = self.stacked[row]
             self.stacked[row] = [None] * self.rows
-
 
     def clear(self):
         self.canvas.delete('all')
