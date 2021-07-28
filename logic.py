@@ -269,4 +269,4 @@ class DebugWin:
         for i in range(len(board)):
             for j in range(len(board[i])):
                 if board[i][j] == 1:
-                    self.canvas.draw_block([[i, j]], 'gray')
+                    self.canvas.draw_block([[i, j]], 'red')
