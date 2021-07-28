@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import PhotoImage
+from PIL import ImageTk, Image
 from util import *
 
 
@@ -20,7 +20,10 @@ class MyCanvas:
 
         colors = ['red', 'green', 'orange', 'purple', 'blue', 'skyblue', 'yellow']
         self.photo = {}
-
+        for color in colors:
+            image = Image.open('resource/' + color + '.png')
+            image = image.resize((self.bw, self.bh))
+            self.photo.setdefault(color, ImageTk.PhotoImage(image))
 
     def place(self, px, py):
         self.canvas.place(x=px, y=py)
@@ -36,8 +39,7 @@ class MyCanvas:
         self.target.clear()
         for pp in pos:
             x, y = calc_coord(self.bw, self.bh, pp[0], pp[1])
-            nx, ny = calc_coord(self.bw, self.bh, pp[0] + 1, pp[1] + 1)
-            rect = self.canvas.create_rectangle(x, y, nx, ny, fill=color)
+            rect = self.canvas.create_image(x, y, anchor='nw', image=self.photo[color])
             self.target.append(rect)
 
         if preview:
