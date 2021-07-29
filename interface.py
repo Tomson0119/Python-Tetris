@@ -113,8 +113,8 @@ class App:
         if event:
             if event.keysym == 'Escape':
                 self.destroy_all()
-            if event.keysym == 'c':
-                self.keep_block()
+            if event.keysym == 'Control_L':
+                self.change_block()
             else:
                 self.board.process_key(event.keysym, True)
 
