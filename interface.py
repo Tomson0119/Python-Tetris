@@ -28,6 +28,8 @@ class App:
         self.goal_hit = 10
         self.curr_hit = 0
         self.score = 0
+
+        self.keep_block = None
         self.curr_block = None
 
         self.timer = timer.Timer()
@@ -88,10 +90,14 @@ class App:
             self.next_board[i].clear()
             self.next_board[i].draw_block(pos, color)
 
-    def keep_block(self):
+    def change_block(self):
         if self.curr_block:
+            self.keep_block, self.curr_block = self.curr_block, self.keep_block
             self.keep_board.clear()
-            self.keep_board.draw_block(self.curr_block.pos, self.curr_block.color)
+            self.keep_board.draw_block(self.keep_block.pos, self.keep_block.color)
+            self.board.delete_curr_block()
+            if self.curr_block:
+                self.board.insert(copy.deepcopy(self.curr_block))
 
     def update(self):
         self.timer.tick()
