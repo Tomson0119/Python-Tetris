@@ -60,7 +60,7 @@ class App:
         self.line_label = ttk.Label(text=str(self.curr_hit) + '/' + str(self.goal_hit), anchor='e')
         self.line_label.place(x=10, y=650, width=120, height=40)
 
-        self.board = Board(self.win, (396, 796), (40, 40), 20, 10)
+        self.board = Board(self.win, (396, 796), (40, 40), 20, 10, self.timer)
         self.board.place(140, 10)
 
         next_label = ttk.Label(text='NEXT', anchor='center')
@@ -104,8 +104,8 @@ class App:
         text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
         self.time_label.configure(text=text)  # 레이블을 업데이트한다.
 
-        self.board.fall(self.level*50 * self.timer.get_elapsed())
-        self.board.update(self.timer.get_elapsed())
+        self.board.fall(self.level * 50 * self.timer.elapsed)
+        self.board.update()
 
         if self.board.is_stacked():
             self.curr_block = self.queue.pop(0)
