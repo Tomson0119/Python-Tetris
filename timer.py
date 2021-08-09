@@ -47,9 +47,6 @@ class Timer:
         if self.elapsed < 0:
             self.elapsed = 0
 
-    def get_elapsed(self):
-        return self.elapsed
-
     def get_total(self):
         if self.stopped:
             return self.stopped - self.base - self.paused
