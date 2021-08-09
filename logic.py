@@ -213,7 +213,6 @@ class Board:
                 self.mx += 1
             if key == 'Down':
                 self.my = 1
-                self.df = 0
             if key == 'z':
                 self.rotate_block(clockwise=False)
             if key == 'x':
@@ -225,10 +224,14 @@ class Board:
             self.pressed[key] = False
             if key == 'Left':
                 self.mx += 1
+                self.dx = 0
             if key == 'Right':
                 self.mx -= 1
+                self.dx = 0
             if key == 'Down':
                 self.my = 0
+                self.dy = 0
+                self.df = 0
 
     def delete_curr_block(self):
         self.canvas.delete_object(self.canvas.target)
@@ -241,16 +244,26 @@ class Board:
             if self.logic.check_line(r):
                 hit_lines.append(r)
         if hit_lines:
+            self.canvas.add_hits(hit_lines)
             self.logic.drop_line(hit_lines)
             self.canvas.drop_line(hit_lines)
+
+    def update_animation(self):
+        if self.anim_dx < self.rows * self.bw and self.canvas.hits:
+            self.canvas.animate(self.timer.elapsed * 0.0000001)
+            self.anim_dx += self.timer.elapsed * 0.0000001
+        else:
+            self.anim_dx = 0
+            self.canvas.delete_object(self.canvas.hits)
 
     def is_stacked(self):
         return True if not self.movable else self.movable.stacked
 
-    def update(self, elapsed):
-        self.move_block(self.mx * 800 * elapsed, self.my * 600 * elapsed)
+    def update(self):
+        self.move_block(self.mx * 600 * self.timer.elapsed, self.my * 600 * self.timer.elapsed)
         self.logic.update(self.movable)
         self.check_lines()
+        self.update_animation()
         self.debug.update(self.logic.board)
 
 
