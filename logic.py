@@ -132,12 +132,15 @@ class Logic:
 
 
 class Board:
-    def __init__(self, master, size, block_size, row, col):
+    def __init__(self, master, size, block_size, row, col, timer):
         self.rows = row
         self.cols = col
         self.bw, self.bh = block_size
 
+        self.timer = timer
+
         self.dx = 0
+        self.anim_dx = 0
         self.dy = 0
         self.df = 0  # Fall
         self.mx, self.my = 0, 0
