@@ -16,6 +16,7 @@ class MyCanvas:
 
         self.target = []
         self.preview = []
+        self.hits = []
         self.stacked = [[None]*self.cols for _ in range(self.rows)]
 
         colors = ['red', 'green', 'orange', 'purple', 'blue', 'skyblue', 'yellow']
@@ -50,7 +51,8 @@ class MyCanvas:
         for pp in pos:
             x, y = calc_coord(self.bw, self.bh, pp[0], pp[1])
             nx, ny = calc_coord(self.bw, self.bh, pp[0] + 1, pp[1] + 1)
-            self.preview.append(self.canvas.create_rectangle(x, y, nx, ny, fill='', outline=self.color, width=2))
+            color = self.color if self.color != 'yellow' else 'gold'
+            self.preview.append(self.canvas.create_rectangle(x, y, nx, ny, fill='', outline=color, width=2))
 
     def redraw_block(self, new_pos):
         self.delete_object(self.target)
@@ -63,6 +65,7 @@ class MyCanvas:
     def delete_object(self, objects):
         for obj in objects:
             self.canvas.delete(obj)
+        objects.clear()
 
     def move(self, x, y, view=None):
         for block in self.target:
@@ -89,6 +92,18 @@ class MyCanvas:
                         self.canvas.move(block, 0, self.bh*i)
                 self.stacked[row + i] = self.stacked[row]
             self.stacked[row] = [None] * self.rows
+
+    def add_hits(self, lines):
+        for line in lines:
+            x, y = calc_coord(self.bw, self.bh, line, -self.rows)
+            nx, ny = calc_coord(self.bw, self.bh, line+1, 0)
+            self.hits.append(self.canvas.create_rectangle(x, y, nx, ny, fill='black'))
+
+    def animate(self, dx):
+        if self.hits:
+            print('animate')
+            for hit in self.hits:
+                self.canvas.move(hit, dx, 0)
 
     def clear(self):
         self.canvas.delete('all')
