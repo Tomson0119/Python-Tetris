@@ -185,7 +185,7 @@ class Board:
             self.dy, y = accumulate_delta(self.dy, self.bh, dy)
             if self.logic.check_move(self.movable.pos, x, y):
                 prev_pos = self.preview_pos()
-                self.canvas.move(x * self.bw, y * self.bh, self.preview_pos())
+                self.canvas.move(x * self.bw, y * self.bh, prev_pos)
                 self.movable.move_coord(x, y)
                 if prev_pos == self.movable.pos:
                     self.canvas.add_stacked(self.movable.pos)
