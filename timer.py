@@ -5,7 +5,7 @@ class Timer:
     def __init__(self):
         self.base = 0
         self.total = 0
-        self.elapsed = 0
+        self.delta = 0
         self.prev = 0
         self.curr = 0
         self.stop = 0
@@ -13,6 +13,10 @@ class Timer:
         self.stopped = False
 
         self.reset()
+
+    @property
+    def elapsed(self):
+        return self.delta
 
     def reset(self):
         curr_time = time.time()
@@ -37,15 +41,15 @@ class Timer:
 
     def tick(self):
         if self.stopped:
-            self.elapsed = 0
+            self.delta = 0
             return
 
         self.curr = time.time()
-        self.elapsed = self.curr - self.prev
+        self.delta = self.curr - self.prev
         self.prev = self.curr
 
         if self.elapsed < 0:
-            self.elapsed = 0
+            self.delta = 0
 
     def get_total(self):
         if self.stopped:
@@ -54,6 +58,9 @@ class Timer:
             return self.curr - self.base - self.paused
 
     def formatted(self):
+        if self.stopped:
+            return None
+
         total = int(self.get_total())
         st = ''
         minute = total // 60

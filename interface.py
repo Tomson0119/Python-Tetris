@@ -102,7 +102,8 @@ class App:
     def update(self):
         self.timer.tick()
         text = self.timer.formatted()    # 현재 시간을 문자열로 변환하고
-        self.time_label.configure(text=text)  # 레이블을 업데이트한다.
+        if text is not None:
+            self.time_label.configure(text=text)  # 레이블을 업데이트한다.
 
         self.board.fall(self.level * 50 * self.timer.elapsed)
         self.board.update()
@@ -116,7 +117,7 @@ class App:
         self.win.after(1, self.update)
 
     def key_pressed(self, event=None):
-        if event:
+        if event and not self.timer.stopped:
             if event.keysym == 'Escape':
                 self.destroy_all()
             if event.keysym == 'Control_L':

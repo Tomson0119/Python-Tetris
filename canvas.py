@@ -10,6 +10,7 @@ class MyCanvas:
         self.rows, self.cols = row, col
 
         self.color = None
+        self.anim_dx = 0
 
         self.canvas = tk.Canvas(master, width=self.tw, height=self.th, bg='white', relief='solid', bd=bd)
         self.draw_grid()
@@ -79,13 +80,16 @@ class MyCanvas:
         for i in range(len(pos)):
             self.stacked[pos[i][0]][pos[i][1]] = self.target[i]
 
+    def remove_lines(self, hits):
+        for row in hits:
+            for col in range(self.cols):
+                self.delete_object(self.stacked[row])
+
     def drop_line(self, hits):
         i = 0
         for row in range(hits[0], -1, -1):
             if row in hits:
                 i += 1
-                for col in range(self.cols):
-                    self.delete_object(self.stacked[row])
             else:
                 for block in self.stacked[row]:
                     if block:
@@ -95,15 +99,20 @@ class MyCanvas:
 
     def add_hits(self, lines):
         for line in lines:
-            x, y = calc_coord(self.bw, self.bh, line, -self.rows)
-            nx, ny = calc_coord(self.bw, self.bh, line+1, 0)
-            self.hits.append(self.canvas.create_rectangle(x, y, nx, ny, fill='black'))
+            x, y = calc_coord(self.bw, self.bh, line, 0)
+            nx, ny = calc_coord(self.bw, self.bh, line+1, self.rows)
+            self.hits.append(self.canvas.create_rectangle(x, y, nx, ny, fill='light cyan', outline='light cyan'))
 
     def animate(self, dx):
         if self.hits:
-            print('animate')
             for hit in self.hits:
                 self.canvas.move(hit, dx, 0)
+            self.anim_dx += dx
+            if self.anim_dx > self.cols * self.bw:
+                self.anim_dx = 0
+                self.delete_object(self.hits)
+                return True
+        return False
 
     def clear(self):
         self.canvas.delete('all')

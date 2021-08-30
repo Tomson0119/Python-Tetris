@@ -145,6 +145,7 @@ class Board:
         self.df = 0  # Fall
         self.mx, self.my = 0, 0
 
+        self.hit_lines = []
         self.movable = None
         self.canvas = MyCanvas(master, size, block_size, row, col, 2)
 
@@ -218,6 +219,7 @@ class Board:
             if key == 'x':
                 self.rotate_block(clockwise=True)
             if key == 'c':
+                print("C")
                 self.instant_move()
 
         elif not pressed and key in self.pressed.keys() and self.pressed[key]:
@@ -239,22 +241,21 @@ class Board:
         self.movable = None
 
     def check_lines(self):
-        hit_lines = []
-        for r in range(self.rows-1, -1, -1):
-            if self.logic.check_line(r):
-                hit_lines.append(r)
-        if hit_lines:
-            self.canvas.add_hits(hit_lines)
-            self.logic.drop_line(hit_lines)
-            self.canvas.drop_line(hit_lines)
+        if len(self.hit_lines) == 0:
+            for r in range(self.rows-1, -1, -1):
+                if self.logic.check_line(r):
+                    self.hit_lines.append(r)
+            if self.hit_lines:
+                self.canvas.add_hits(self.hit_lines)
+                self.canvas.remove_lines(self.hit_lines)
 
     def update_animation(self):
-        if self.anim_dx < self.rows * self.bw and self.canvas.hits:
-            self.canvas.animate(self.timer.elapsed * 0.0000001)
-            self.anim_dx += self.timer.elapsed * 0.0000001
-        else:
-            self.anim_dx = 0
-            self.canvas.delete_object(self.canvas.hits)
+        if self.hit_lines:
+            self.timer.pause()
+            if self.canvas.animate(2):
+                self.timer.start()
+                return True
+        return False
 
     def is_stacked(self):
         return True if not self.movable else self.movable.stacked
@@ -263,7 +264,10 @@ class Board:
         self.move_block(self.mx * 600 * self.timer.elapsed, self.my * 600 * self.timer.elapsed)
         self.logic.update(self.movable)
         self.check_lines()
-        self.update_animation()
+        if self.update_animation():
+            self.logic.drop_line(self.hit_lines)
+            self.canvas.drop_line(self.hit_lines)
+            self.hit_lines.clear()
         self.debug.update(self.logic.board)
 
 
