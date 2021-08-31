@@ -101,7 +101,7 @@ class MyCanvas:
         for line in lines:
             x, y = calc_coord(self.bw, self.bh, line, 0)
             nx, ny = calc_coord(self.bw, self.bh, line+1, self.rows)
-            self.hits.append(self.canvas.create_rectangle(x, y, nx, ny, fill='light cyan', outline='light cyan'))
+            self.hits.append(self.canvas.create_rectangle(x, y, nx, ny, fill='light gray', outline='light gray'))
 
     def animate(self, dx):
         if self.hits:
