@@ -1,5 +1,6 @@
 import random
 from canvas import *
+from timer import *
 
 
 class Block:
@@ -73,6 +74,13 @@ class Logic:
         self.width = width
         self.height = height
         self.board = [[0] * width for _ in range(height + 4)]
+
+    def is_over(self):
+        for r in range(0, 4):
+            for c in range(0, self.width):
+                if self.board[r][c] != 0:
+                    return True
+        return False
 
     def update(self, block):
         if block and block.stacked:
@@ -149,6 +157,8 @@ class Board:
         self.movable = None
         self.canvas = MyCanvas(master, size, block_size, row, col, 2)
 
+        self.anim_timer = None
+
         self.logic = Logic(col, row)
         self.debug = DebugWin(master, self.logic.board)
 
@@ -219,7 +229,6 @@ class Board:
             if key == 'x':
                 self.rotate_block(clockwise=True)
             if key == 'c':
-                print("C")
                 self.instant_move()
 
         elif not pressed and key in self.pressed.keys() and self.pressed[key]:
@@ -252,10 +261,17 @@ class Board:
     def update_animation(self):
         if self.hit_lines:
             self.timer.pause()
-            if self.canvas.animate(2):
+            if not self.anim_timer:
+                self.anim_timer = Timer()
+                self.anim_timer.start()
+            if self.canvas.animate(500 * self.anim_timer.elapsed):
                 self.timer.start()
+                self.anim_timer = None
                 return True
         return False
+
+    def is_game_over(self):
+        return self.logic.is_over()
 
     def is_stacked(self):
         return True if not self.movable else self.movable.stacked
@@ -264,10 +280,15 @@ class Board:
         self.move_block(self.mx * 600 * self.timer.elapsed, self.my * 600 * self.timer.elapsed)
         self.logic.update(self.movable)
         self.check_lines()
+
         if self.update_animation():
             self.logic.drop_line(self.hit_lines)
             self.canvas.drop_line(self.hit_lines)
             self.hit_lines.clear()
+
+        if self.anim_timer:
+            self.anim_timer.tick()
+
         self.debug.update(self.logic.board)
 
 
