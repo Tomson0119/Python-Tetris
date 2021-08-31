@@ -108,7 +108,10 @@ class App:
         self.board.fall(self.level * 50 * self.timer.elapsed)
         self.board.update()
 
-        if self.board.is_stacked():
+        if self.board.is_game_over():
+            self.timer.pause()
+
+        if self.board.is_stacked() and not self.board.is_game_over():
             self.curr_block = self.queue.pop(0)
             self.board.insert(copy.deepcopy(self.curr_block))
             self.queue.append(Block())  # 큐에 새로운 블록을 넣고
