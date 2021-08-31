@@ -53,14 +53,11 @@ class Timer:
 
     def get_total(self):
         if self.stopped:
-            return self.stopped - self.base - self.paused
+            return self.stop - self.base - self.paused
         else:
             return self.curr - self.base - self.paused
 
     def formatted(self):
-        if self.stopped:
-            return None
-
         total = int(self.get_total())
         st = ''
         minute = total // 60
